@@ -4,8 +4,12 @@
     },
     "claudeCode.environmentVariables": [
         {
+            "name": "ANTHROPIC_LOG",
+            "value": "debug"
+        },
+        {
             "name": "ANTHROPIC_BASE_URL",
-            "value": "http://localhost:56194"
+            "value": "http://localhost:57913"
         },
         {
             "name": "ANTHROPIC_AUTH_TOKEN",
@@ -14,10 +18,6 @@
         {
             "name": "NO_PROXY",
             "value": "localhost,127.0.0.1"
-        },
-        {
-            "name": "ANTHROPIC_LOG",
-            "value": "debug"
         }
     ],
     "claudeCode.disableLoginPrompt": true
