@@ -340,28 +340,234 @@ export default PricingCard;`;
         return `import React from 'react';
 
 const Card = ({
-  title = "Welcome to Our Service",
-  description = "Discover amazing features and capabilities that will transform your experience.",
-  imageUrl,
-  actions
+  productName = "PDF Architect PRO",
+  originalPrice = 3886.46,
+  discountedPrice = 1703.06,
+  discountPercent = 56,
+  features = ["View", "Create", "Convert", "Edit", "Page", "Secure", "Batch", "Comment", "Forms"],
+  licenseType = "1-year license",
+  description = "",
+  buttonText = "SELECT"
 }) => {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editableText, setEditableText] = React.useState({
+    productName,
+    description,
+    buttonText,
+    licenseType,
+    customNote: ""
+  });
+
+  // FIX: Critical - Sync state when props change
+  React.useEffect(() => {
+    setEditableText({
+      productName,
+      description,
+      buttonText,
+      licenseType,
+      customNote: ""
+    });
+  }, [productName, description, buttonText, licenseType]);
+
+  // FIX: High - Sanitize and validate input
+  const handleTextChange = (field, value) => {
+    if (typeof value !== 'string') return;
+    const sanitized = value.slice(0, 500); // Limit length
+    setEditableText(prev => ({ ...prev, [field]: sanitized }));
+  };
+
+  // FIX: High - Safe string parsing helpers
+  const safeParseProductName = (name) => {
+    if (!name || typeof name !== 'string') return { main: '', last: '' };
+    const parts = name.trim().split(' ');
+    if (parts.length === 0) return { main: '', last: '' };
+    if (parts.length === 1) return { main: '', last: parts[0] };
+    return {
+      main: parts.slice(0, -1).join(' '),
+      last: parts[parts.length - 1]
+    };
+  };
+
+  // FIX: High - Safe number formatting
+  const safeFormatPrice = (price) => {
+    const num = Number(price);
+    if (isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  };
+
+  // FIX: High - Safe discount percent validation
+  const safeDiscountPercent = () => {
+    const num = Number(discountPercent);
+    if (isNaN(num) || num < 0 || num > 100) return 0;
+    return Math.round(num);
+  };
+
+  // FIX: High - Safe features array validation
+  const safeFeatures = Array.isArray(features) ? features : [];
+
+  const productNameParts = safeParseProductName(editableText.productName);
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-48 object-cover"
-        />
+    <div className="space-y-4">
+      {/* Edit Toggle Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm font-medium"
+        >
+          {isEditing ? 'View Mode' : 'Edit Text'}
+        </button>
+      </div>
+
+      {/* Edit Form */}
+      {isEditing && (
+        <div className="bg-gray-50 p-6 rounded-lg border border-gray-300 space-y-4">
+          <h3 className="font-bold text-lg mb-4">Edit Card Text</h3>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product Name
+            </label>
+            <input
+              type="text"
+              value={editableText.productName}
+              onChange={(e) => handleTextChange('productName', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description (optional)
+            </label>
+            <textarea
+              value={editableText.description}
+              onChange={(e) => handleTextChange('description', e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Add a description..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Button Text
+            </label>
+            <input
+              type="text"
+              value={editableText.buttonText}
+              onChange={(e) => handleTextChange('buttonText', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              License Type
+            </label>
+            <input
+              type="text"
+              value={editableText.licenseType}
+              onChange={(e) => handleTextChange('licenseType', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Custom Note (appears at top)
+            </label>
+            <input
+              type="text"
+              value={editableText.customNote}
+              onChange={(e) => handleTextChange('customNote', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Add a custom note..."
+            />
+          </div>
+        </div>
       )}
-      <div className="p-6">
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-gray-600 mb-4">{description}</p>
-        {actions && (
-          <div className="mt-4">
-            {actions}
+
+      {/* Pricing Card */}
+      <div className="w-full max-w-md mx-auto bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+        {/* Custom Note */}
+        {editableText.customNote && (
+          <div className="bg-blue-50 border-b border-blue-200 px-4 py-3 text-center">
+            <p className="text-blue-800 text-sm font-medium">{editableText.customNote}</p>
           </div>
         )}
+        {/* Product Name */}
+        <div className="pt-12 pb-6 text-center relative">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            {productNameParts.main}
+          </h2>
+          <p className="text-4xl font-bold text-red-600">
+            {productNameParts.last}
+          </p>
+
+          {/* Description */}
+          {editableText.description && (
+            <p className="text-gray-600 text-sm mt-3 px-8">{editableText.description}</p>
+          )}
+
+          {/* Discount Badge */}
+          <div className="absolute -top-2 right-8">
+            <div className="relative">
+              <svg width="100" height="100" viewBox="0 0 100 100" className="drop-shadow-lg">
+                <circle cx="50" cy="50" r="45" fill="#dc2626" />
+                <path
+                  d="M50 5 L55 20 L70 15 L65 30 L80 30 L70 42 L80 55 L65 52 L70 67 L55 62 L50 77 L45 62 L30 67 L35 52 L20 55 L30 42 L20 30 L35 30 L30 15 L45 20 Z"
+                  fill="#dc2626"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-white font-bold">
+                <div className="text-2xl leading-none">{safeDiscountPercent()}%</div>
+                <div className="text-sm leading-none mt-1">OFF</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing */}
+        <div className="text-center pb-6">
+          <div className="flex items-center justify-center gap-4">
+            <span className="text-2xl text-gray-400 line-through">
+              \${safeFormatPrice(originalPrice)}
+            </span>
+            <span className="text-5xl font-bold text-gray-900">
+              \${safeFormatPrice(discountedPrice)}
+            </span>
+          </div>
+        </div>
+
+        {/* Select Button */}
+        <div className="px-12 pb-8">
+          <button className="w-full bg-[#2c4d6b] hover:bg-[#234159] text-white font-bold text-xl py-4 rounded transition-colors">
+            {editableText.buttonText}
+          </button>
+        </div>
+
+        {/* Includes Section */}
+        <div className="border-t border-gray-300 px-8 py-6">
+          <h3 className="text-center text-gray-700 font-bold text-lg mb-6">
+            INCLUDES:
+          </h3>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+            {safeFeatures.map((feature, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-gray-800 font-medium">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* License Type */}
+        <div className="text-center py-4 text-gray-500 text-sm border-t border-gray-300">
+          {editableText.licenseType}
+        </div>
       </div>
     </div>
   );
@@ -426,7 +632,7 @@ export default Counter;`;
       case "pricing":
         return '      <div className="relative z-10">';
       case "card":
-        return '      <div className="p-6">';
+        return '  const [isEditing, setIsEditing] = React.useState(false);';
       default:
         return "  const increment = () => setCount(count + 1);";
     }
@@ -439,7 +645,7 @@ export default Counter;`;
       case "pricing":
         return '      <div className="relative z-10 animate-fade-in">';
       case "card":
-        return '      <div className="p-6 hover:bg-gray-50 transition-colors">';
+        return '  const [isEditing, setIsEditing] = React.useState(true);';
       default:
         return "  const increment = () => setCount(prev => prev + 1);";
     }
@@ -466,17 +672,7 @@ export default function App() {
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
-      <div className="w-full max-w-md">
-        <Card
-          title="Amazing Product"
-          description="This is a fantastic product that will change your life. Experience the difference today!"
-          actions={
-            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-              Learn More
-            </button>
-          }
-        />
-      </div>
+      <Card />
     </div>
   );
 }`;
